@@ -53,17 +53,17 @@ export default function LandingPage({ onNavigate }) {
   }, []);
 
   const MODULES = [
-    {
-      tag: 'Live Tool', tagColor: '#0369a1', tagBg: '#e0f2fe', tagBorder: '#bae6fd',
-      num: null, icon: '⚡', iconBg: 'linear-gradient(135deg,#e0f2fe,#bae6fd)',
-      title: 'Rate Limiter & API Gateway',
-      desc: 'Real-time simulator for Token Bucket, Sliding Window & Fixed Window algorithms. Monitor live traffic, detect abuse, manage firewall rules.',
-      topics: ['Token Bucket', 'Sliding Window', 'Fixed Window', 'WebSocket', 'Abuse Detection'],
-      topicColor: '#0369a1', topicBg: '#e0f2fe', topicBorder: '#bae6fd',
-      cta: 'Launch Dashboard', ctaColor: '#0ea5e9',
-      border: '#bae6fd', grad: 'linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%)',
-      shadow: '0 20px 60px rgba(14,165,233,0.18)', key: 'rateLimiter',
-    },
+    // {
+    //   tag: 'Live Tool', tagColor: '#0369a1', tagBg: '#e0f2fe', tagBorder: '#bae6fd',
+    //   num: null, icon: '⚡', iconBg: 'linear-gradient(135deg,#e0f2fe,#bae6fd)',
+    //   title: 'Rate Limiter & API Gateway',
+    //   desc: 'Real-time simulator for Token Bucket, Sliding Window & Fixed Window algorithms. Monitor live traffic, detect abuse, manage firewall rules.',
+    //   topics: ['Token Bucket', 'Sliding Window', 'Fixed Window', 'WebSocket', 'Abuse Detection'],
+    //   topicColor: '#0369a1', topicBg: '#e0f2fe', topicBorder: '#bae6fd',
+    //   cta: 'Launch Dashboard', ctaColor: '#0ea5e9',
+    //   border: '#bae6fd', grad: 'linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%)',
+    //   shadow: '0 20px 60px rgba(14,165,233,0.18)', key: 'rateLimiter',
+    // },
     {
       tag: 'Module 1', tagColor: '#6d28d9', tagBg: '#ede9fe', tagBorder: '#ddd6fe',
       num: '01', icon: '🖥️', iconBg: 'linear-gradient(135deg,#ede9fe,#ddd6fe)',
