@@ -1,0 +1,14 @@
+{
+  "name": "rate-limit-simulator-suite",
+  "version": "1.0.0",
+  "description": "Full-stack MERN Rate Limiting, Sliding Windows, Abuse Prevention & API Gateway Simulator",
+  "scripts": {
+    "server": "npm --prefix server run dev",
+    "client": "npm --prefix client run dev",
+    "start": "npm --prefix server start",
+    "build:client": "npm --prefix client run build"
+  },
+  "keywords": ["rate-limiting", "sliding-window", "token-bucket", "abuse-prevention", "api-gateway", "mern"],
+  "author": "Antigravity",
+  "license": "MIT"
+}
