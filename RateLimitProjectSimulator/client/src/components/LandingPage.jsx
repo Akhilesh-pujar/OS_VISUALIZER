@@ -86,6 +86,17 @@ export default function LandingPage({ onNavigate }) {
       border: '#bfdbfe', grad: 'linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%)',
       shadow: '0 20px 60px rgba(37,99,235,0.18)', key: 'processConcepts',
     },
+    {
+      tag: 'Module 3', tagColor: '#059669', tagBg: '#d1fae5', tagBorder: '#a7f3d0',
+      num: '03', icon: '🧵', iconBg: 'linear-gradient(135deg,#d1fae5,#a7f3d0)',
+      title: 'Threads & Concurrency',
+      desc: 'Interactive visualizations for Thread Overview, Multithreading Models (Many-to-One, One-to-One, Many-to-Many), Thread Libraries (Pthreads, Win32, Java), and Threading Issues (fork/exec, Signals, Cancellation, TLS).',
+      topics: ['Thread Overview', 'Multithreading Models', 'Pthreads / Win32 / Java', 'Threading Issues', 'TLS & LWPs'],
+      topicColor: '#059669', topicBg: '#d1fae5', topicBorder: '#a7f3d0',
+      cta: 'Explore Module 3', ctaColor: '#059669',
+      border: '#a7f3d0', grad: 'linear-gradient(135deg,#f0fdf4 0%,#d1fae5 100%)',
+      shadow: '0 20px 60px rgba(5,150,105,0.18)', key: 'threadsConcepts',
+    },
   ];
 
   return (
@@ -152,7 +163,7 @@ export default function LandingPage({ onNavigate }) {
         </div>
 
         <div style={{ display: 'flex', gap: '3rem', justifyContent: 'center', marginTop: '3.5rem', borderTop: '1.5px solid #e2e8f0', paddingTop: '2.5rem', flexWrap: 'wrap' }}>
-          {[{ val: '2', label: 'OS Modules' }, { val: '10+', label: 'Visualizers' }, { val: '3', label: 'Rate Algorithms' }, { val: 'Live', label: 'Animations' }].map(s => (
+          {[{ val: '3', label: 'OS Modules' }, { val: '14+', label: 'Visualizers' }, { val: '3', label: 'Rate Algorithms' }, { val: 'Live', label: 'Animations' }].map(s => (
             <div key={s.label} style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '1.8rem', fontWeight: 900, background: 'linear-gradient(90deg,#2563eb,#7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{s.val}</div>
               <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.2rem', fontWeight: 500 }}>{s.label}</div>

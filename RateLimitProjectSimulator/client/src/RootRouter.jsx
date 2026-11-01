@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import LandingPage from './components/LandingPage.jsx';
 import OSStructures from './components/OSStructures.jsx';
 import ProcessConcepts from './components/ProcessConcepts.jsx';
+import ThreadsConcepts from './components/ThreadsConcepts.jsx';
 import App from './App.jsx';
 
 /**
@@ -23,6 +24,10 @@ export default function RootRouter() {
 
   if (page === 'processConcepts') {
     return <ProcessConcepts onBack={() => setPage('home')} />;
+  }
+
+  if (page === 'threadsConcepts') {
+    return <ThreadsConcepts onBack={() => setPage('home')} />;
   }
 
   // rateLimiter
