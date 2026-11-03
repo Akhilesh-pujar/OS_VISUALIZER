@@ -436,13 +436,14 @@ export default function IPCMechanismsViz() {
                   </span>
                 </div>
                 <div style={{
-                  background: "#000000",
-                  color: "#22c55e",
+                  background: "#ffffff",
+                  color: "#000000",
+                  border: "1.5px solid #000000",
                   fontFamily: "monospace",
                   padding: "0.6rem 0.9rem",
                   borderRadius: 6,
                   fontSize: "14px",
-                  fontWeight: 700,
+                  fontWeight: 800,
                   minHeight: "36px",
                   display: "flex",
                   alignItems: "center"
@@ -454,20 +455,21 @@ export default function IPCMechanismsViz() {
               {/* Side-by-Side C Code: Figure 3.17 (Producer) & Figure 3.18 (Consumer) */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 {/* Producer Code Card */}
-                <div style={{ border: "2px solid #000000", borderRadius: 10, overflow: "hidden" }}>
-                  <div style={{ background: "#2563eb", color: "#ffffff", padding: "0.6rem 0.9rem", fontSize: "14px", fontWeight: 900, display: "flex", justifyContent: "space-between" }}>
+                <div style={{ border: "2px solid #000000", borderRadius: 10, overflow: "hidden", background: "#ffffff" }}>
+                  <div style={{ background: "#f8fafc", color: "#000000", borderBottom: "2px solid #000000", padding: "0.6rem 0.9rem", fontSize: "14px", fontWeight: 900, display: "flex", justifyContent: "space-between" }}>
                     <span>Figure 3.17: Producer Process (POSIX shm)</span>
-                    <span>writer.c</span>
+                    <span style={{ color: "#2563eb" }}>writer.c</span>
                   </div>
                   <pre style={{
                     margin: 0,
                     padding: "0.75rem",
-                    background: "#000000",
-                    color: "#ffffff",
-                    fontSize: "12px",
+                    background: "#ffffff",
+                    color: "#000000",
+                    fontSize: "13px",
                     lineHeight: 1.45,
                     fontFamily: "Consolas, monospace",
-                    overflowX: "auto"
+                    overflowX: "auto",
+                    fontWeight: 600
                   }}>
 {`#include <stdio.h>
 #include <stdlib.h>
@@ -506,20 +508,21 @@ int main()
                 </div>
 
                 {/* Consumer Code Card */}
-                <div style={{ border: "2px solid #000000", borderRadius: 10, overflow: "hidden" }}>
-                  <div style={{ background: "#16a34a", color: "#ffffff", padding: "0.6rem 0.9rem", fontSize: "14px", fontWeight: 900, display: "flex", justifyContent: "space-between" }}>
+                <div style={{ border: "2px solid #000000", borderRadius: 10, overflow: "hidden", background: "#ffffff" }}>
+                  <div style={{ background: "#f8fafc", color: "#000000", borderBottom: "2px solid #000000", padding: "0.6rem 0.9rem", fontSize: "14px", fontWeight: 900, display: "flex", justifyContent: "space-between" }}>
                     <span>Figure 3.18: Consumer Process (POSIX shm)</span>
-                    <span>reader.c</span>
+                    <span style={{ color: "#16a34a" }}>reader.c</span>
                   </div>
                   <pre style={{
                     margin: 0,
                     padding: "0.75rem",
-                    background: "#000000",
-                    color: "#ffffff",
-                    fontSize: "12px",
+                    background: "#ffffff",
+                    color: "#000000",
+                    fontSize: "13px",
                     lineHeight: 1.45,
                     fontFamily: "Consolas, monospace",
-                    overflowX: "auto"
+                    overflowX: "auto",
+                    fontWeight: 600
                   }}>
 {`#include <stdio.h>
 #include <stdlib.h>
