@@ -97,6 +97,17 @@ export default function LandingPage({ onNavigate }) {
       border: '#a7f3d0', grad: 'linear-gradient(135deg,#f0fdf4 0%,#d1fae5 100%)',
       shadow: '0 20px 60px rgba(5,150,105,0.18)', key: 'threadsConcepts',
     },
+    {
+      tag: 'Module 4', tagColor: '#d97706', tagBg: '#fef3c7', tagBorder: '#fde68a',
+      num: '04', icon: '⏱️', iconBg: 'linear-gradient(135deg,#fef3c7,#fde68a)',
+      title: 'CPU Scheduling',
+      desc: 'Interactive Gantt charts, live step simulations, and KPI tables for FCFS (Convoy effect), SJF & Preemptive SRTF, Round Robin (Quantum slider), Priority Scheduling & Aging, and Multilevel Feedback Queue (MLFQ).',
+      topics: ['FCFS & Convoy Effect', 'SJF & Preemptive SRTF', 'Round-Robin (q slider)', 'Priority & Aging', 'Multilevel Feedback Queue'],
+      topicColor: '#b45309', topicBg: '#fef3c7', topicBorder: '#fde68a',
+      cta: 'Explore Module 4', ctaColor: '#d97706',
+      border: '#fde68a', grad: 'linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%)',
+      shadow: '0 20px 60px rgba(217,119,6,0.18)', key: 'cpuScheduling',
+    },
   ];
 
   return (

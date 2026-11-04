@@ -3,13 +3,17 @@ import LandingPage from './components/LandingPage.jsx';
 import OSStructures from './components/OSStructures.jsx';
 import ProcessConcepts from './components/ProcessConcepts.jsx';
 import ThreadsConcepts from './components/ThreadsConcepts.jsx';
+import CPUSchedulingConcepts from './components/CPUSchedulingConcepts.jsx';
 import App from './App.jsx';
 
 /**
  * RootRouter — top-level navigator between:
- *   'home'         → LandingPage (two buttons)
- *   'rateLimiter'  → Existing Rate Limiter App
- *   'osStructures' → New 3D OS Structures page
+ *   'home'          → LandingPage (two buttons)
+ *   'rateLimiter'   → Existing Rate Limiter App
+ *   'osStructures'  → New 3D OS Structures page
+ *   'processConcepts' → Chapter 3 Process Concepts
+ *   'threadsConcepts' → Chapter 4 Threads & Concurrency
+ *   'cpuScheduling' → Chapter 5 CPU Scheduling
  */
 export default function RootRouter() {
   const [page, setPage] = useState('home');
@@ -28,6 +32,10 @@ export default function RootRouter() {
 
   if (page === 'threadsConcepts') {
     return <ThreadsConcepts onBack={() => setPage('home')} />;
+  }
+
+  if (page === 'cpuScheduling') {
+    return <CPUSchedulingConcepts onBack={() => setPage('home')} />;
   }
 
   // rateLimiter
