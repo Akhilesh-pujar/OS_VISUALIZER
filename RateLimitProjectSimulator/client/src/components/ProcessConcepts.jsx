@@ -1,4 +1,5 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import ProcessConceptBasics from "./ch3/ProcessConceptBasics.jsx";
 import ProcessStatesViz from "./ch3/ProcessStatesViz.jsx";
 import ProcessSchedulingViz from "./ch3/ProcessSchedulingViz.jsx";
@@ -89,8 +90,11 @@ const TOPICS = [
   }
 ];
 
-export default function ProcessConcepts({ onBack }) {
-  const [activeTopic, setActiveTopic] = useState("overview");
+export default function ProcessConcepts({ onBack, defaultTopic }) {
+  const { topicId } = useParams();
+  const navigate = useNavigate();
+  const handleBack = onBack || (() => navigate('/'));
+  const [activeTopic, setActiveTopic] = useState(topicId || defaultTopic || "overview");
 
   const currentTopicObj = TOPICS.find((t) => t.id === activeTopic);
   const ActiveComponent = currentTopicObj?.component;
@@ -112,7 +116,7 @@ export default function ProcessConcepts({ onBack }) {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <button
-            onClick={activeTopic === "overview" ? onBack : () => setActiveTopic("overview")}
+            onClick={activeTopic === "overview" ? handleBack : () => setActiveTopic("overview")}
             style={{
               background: "#ffffff",
               border: "2px solid #000000",

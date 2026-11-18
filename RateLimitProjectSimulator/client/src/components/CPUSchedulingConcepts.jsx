@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import FCFSScheduling from "./ch5/FCFSScheduling.jsx";
 import SJFScheduling from "./ch5/SJFScheduling.jsx";
 import RoundRobinScheduling from "./ch5/RoundRobinScheduling.jsx";
@@ -75,8 +76,11 @@ const TOPICS = [
   }
 ];
 
-export default function CPUSchedulingConcepts({ onBack }) {
-  const [activeTopic, setActiveTopic] = useState("fcfs");
+export default function CPUSchedulingConcepts({ onBack, defaultTopic }) {
+  const { topicId } = useParams();
+  const navigate = useNavigate();
+  const handleBack = onBack || (() => navigate('/'));
+  const [activeTopic, setActiveTopic] = useState(topicId || defaultTopic || "fcfs");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -127,7 +131,7 @@ export default function CPUSchedulingConcepts({ onBack }) {
         {/* Left: Back button & Breadcrumb */}
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <button
-            onClick={onBack}
+            onClick={handleBack}
             style={{
               background: "#ffffff",
               color: "#000000",

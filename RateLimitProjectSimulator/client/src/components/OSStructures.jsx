@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -1661,7 +1662,10 @@ const SECTIONS = [
 /* ══════════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ══════════════════════════════════════════════════════════════════════════ */
-export default function OSStructures({ onBack }) {
+export default function OSStructures({ onBack, defaultTopic }) {
+  const { topicId } = useParams();
+  const navigate = useNavigate();
+  const handleBack = onBack || (() => navigate('/'));
   const mountRef = useRef(null);
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
@@ -1677,7 +1681,7 @@ export default function OSStructures({ onBack }) {
   const rotRef = useRef({ x: 0.28, y: -0.3 });
 
   // Simulation controls state
-  const [activeSection, setActiveSection] = useState('simple');
+  const [activeSection, setActiveSection] = useState(topicId || defaultTopic || 'simple');
   const [simMode, setSimMode] = useState('idle'); // 'idle' | 'single' | 'million'
   const [simPaused, setSimPaused] = useState(false);
   const [simSpeed, setSimSpeed] = useState(1);
@@ -1833,7 +1837,7 @@ export default function OSStructures({ onBack }) {
         boxShadow: '0 2px 14px rgba(99,102,241,0.07)',
       }}>
         <button
-          onClick={onBack}
+          onClick={handleBack}
           style={{
             background: '#f1f5f9', border: '1.5px solid #e2e8f0', borderRadius: '10px',
             padding: '0.38rem 1rem', color: '#475569', cursor: 'pointer',

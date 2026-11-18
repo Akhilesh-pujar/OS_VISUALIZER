@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import ThreadOverview from "./ch4/ThreadOverview.jsx";
 import MultithreadingModels from "./ch4/MultithreadingModels.jsx";
 import ThreadLibraries from "./ch4/ThreadLibraries.jsx";
@@ -61,8 +62,11 @@ const TOPICS = [
   }
 ];
 
-export default function ThreadsConcepts({ onBack }) {
-  const [activeTopic, setActiveTopic] = useState("overview");
+export default function ThreadsConcepts({ onBack, defaultTopic }) {
+  const { topicId } = useParams();
+  const navigate = useNavigate();
+  const handleBack = onBack || (() => navigate('/'));
+  const [activeTopic, setActiveTopic] = useState(topicId || defaultTopic || "overview");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -113,7 +117,7 @@ export default function ThreadsConcepts({ onBack }) {
         {/* Left: Back & Breadcrumb */}
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <button
-            onClick={onBack}
+            onClick={handleBack}
             style={{
               background: "#ffffff",
               border: "2px solid #000000",

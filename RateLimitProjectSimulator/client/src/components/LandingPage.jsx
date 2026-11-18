@@ -1,188 +1,674 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Room3DLanding from './Room3DLanding.jsx';
 
-export default function LandingPage({ onNavigate }) {
-  const canvasRef = useRef(null);
-  const particlesRef = useRef([]);
-  const animFrameRef = useRef(null);
+const FONT = "'Times New Roman', Times, serif";
 
+// ── All 5 OS Chapters with exact routes & topic mappings ──────────────────────
+const OS_CHAPTERS = [
+  {
+    key: 'osStructures',
+    route: 'os-structures',
+    chapterNum: 'Chapter 2',
+    title: 'OS Structures',
+    subtitle: '& Virtual Machines',
+    icon: '🖥️',
+    color: '#6d28d9',
+    bg: '#faf5ff',
+    border: '#c4b5fd',
+    cpuBlock: 'hal',
+    cpuLabel: 'HAL & Ring 0 Kernel',
+    topics: [
+      { id: 'simple', label: 'Simple Structure' },
+      { id: 'layered', label: 'Layered OS' },
+      { id: 'microkernel', label: 'Microkernel' },
+      { id: 'modules', label: 'Kernel Modules' },
+      { id: 'vmware', label: 'Virtual Machines' },
+    ],
+  },
+  {
+    key: 'processConcepts',
+    route: 'process-concepts',
+    chapterNum: 'Chapter 3',
+    title: 'Process Management',
+    subtitle: '& Inter-Process Comm',
+    icon: '⚙️',
+    color: '#1d4ed8',
+    bg: '#eff6ff',
+    border: '#93c5fd',
+    cpuBlock: 'pcb',
+    cpuLabel: 'PCB & Execution Context',
+    topics: [
+      { id: 'concept', label: 'PCB & Memory' },
+      { id: 'states', label: 'Process 5-States' },
+      { id: 'scheduling', label: 'Ready Queues' },
+      { id: 'operations', label: 'fork() / exec()' },
+      { id: 'ipc', label: 'IPC & Pipes' },
+    ],
+  },
+  {
+    key: 'threadsConcepts',
+    route: 'threads-concepts',
+    chapterNum: 'Chapter 4',
+    title: 'Threads & Concurrency',
+    subtitle: '& Thread Libraries',
+    icon: '🧵',
+    color: '#047857',
+    bg: '#f0fdf4',
+    border: '#86efac',
+    cpuBlock: 'smt',
+    cpuLabel: 'SMT Cores & Thread Context',
+    topics: [
+      { id: 'overview', label: 'Thread Overview' },
+      { id: 'models', label: 'Kernel vs User' },
+      { id: 'libraries', label: 'Pthreads & Win32' },
+      { id: 'issues', label: 'Threading Issues (TLS)' },
+    ],
+  },
+  {
+    key: 'cpuScheduling',
+    route: 'cpu-scheduling',
+    chapterNum: 'Chapter 5',
+    title: 'CPU Scheduling',
+    subtitle: '& Dispatcher Algorithms',
+    icon: '⏱️',
+    color: '#b45309',
+    bg: '#fffbeb',
+    border: '#fde68a',
+    cpuBlock: 'sched',
+    cpuLabel: 'Dispatcher & APIC Timer',
+    topics: [
+      { id: 'fcfs', label: 'FCFS & Convoy' },
+      { id: 'sjf', label: 'SJF / SRTF' },
+      { id: 'rr', label: 'Round-Robin' },
+      { id: 'priority', label: 'Priority & Aging' },
+      { id: 'mlfq', label: 'MLFQ Queues' },
+    ],
+  },
+  {
+    key: 'synchronizationConcepts',
+    route: 'synchronization',
+    chapterNum: 'Chapter 6',
+    title: 'Process Synchronization',
+    subtitle: '& Classic Concurrency Problems',
+    icon: '🔒',
+    color: '#be185d',
+    bg: '#fdf2f8',
+    border: '#fbcfe8',
+    cpuBlock: 'sync',
+    cpuLabel: 'Atomic Bus & Cache Lock',
+    topics: [
+      { id: 'critical', label: 'Critical Section' },
+      { id: 'peterson', label: "Peterson's Solution" },
+      { id: 'hardware', label: 'Hardware Atomics' },
+      { id: 'semaphores', label: 'Semaphores' },
+      { id: 'classic', label: 'Classic Problems' },
+    ],
+  },
+];
+
+const HARDWARE_COMPONENTS = [
+  { icon: '💾', label: 'Disk & Secondary Storage', sub: 'Non-volatile storage, block I/O, paging file' },
+  { icon: '🧠', label: 'Main Memory (RAM)', sub: 'Physical memory frames, DDR5 bus, MMU paging' },
+  { icon: '🔁', label: 'DMA Controller', sub: 'Direct Memory Access, bypasses CPU for bulk I/O' },
+  { icon: '⚡', label: 'I/O & Interrupt Controller', sub: 'APIC, IRQ vector lines, hardware trap interrupts' },
+];
+
+export default function LandingPage() {
+  const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState('3d_room'); // '3d_room' | 'architecture_map'
+  const [hoveredChapter, setHoveredChapter] = useState(null);
+  const [loadingDest, setLoadingDest] = useState(null);
+  const [animTime, setAnimTime] = useState(0);
+
+  // Animation frame for bus pulses
+  const rafRef = useRef(null);
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-    resize();
-    window.addEventListener('resize', resize);
-    particlesRef.current = Array.from({ length: 60 }, () => ({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
-      r: Math.random() * 2.5 + 0.8,
-      color: Math.random() > 0.5 ? '59,130,246' : '139,92,246',
-    }));
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const pts = particlesRef.current;
-      for (let i = 0; i < pts.length; i++) {
-        for (let j = i + 1; j < pts.length; j++) {
-          const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 110) {
-            ctx.beginPath();
-            ctx.strokeStyle = `rgba(99,130,220,${0.08 * (1 - dist / 110)})`;
-            ctx.lineWidth = 0.8;
-            ctx.moveTo(pts[i].x, pts[i].y);
-            ctx.lineTo(pts[j].x, pts[j].y);
-            ctx.stroke();
-          }
-        }
-      }
-      pts.forEach(p => {
-        p.x += p.vx; p.y += p.vy;
-        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${p.color},0.3)`;
-        ctx.fill();
-      });
-      animFrameRef.current = requestAnimationFrame(draw);
+    let frame = 0;
+    const loop = () => {
+      frame++;
+      setAnimTime(frame);
+      rafRef.current = requestAnimationFrame(loop);
     };
-    draw();
-    return () => { cancelAnimationFrame(animFrameRef.current); window.removeEventListener('resize', resize); };
+    rafRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafRef.current);
   }, []);
 
-  const MODULES = [
-    // {
-    //   tag: 'Live Tool', tagColor: '#0369a1', tagBg: '#e0f2fe', tagBorder: '#bae6fd',
-    //   num: null, icon: '⚡', iconBg: 'linear-gradient(135deg,#e0f2fe,#bae6fd)',
-    //   title: 'Rate Limiter & API Gateway',
-    //   desc: 'Real-time simulator for Token Bucket, Sliding Window & Fixed Window algorithms. Monitor live traffic, detect abuse, manage firewall rules.',
-    //   topics: ['Token Bucket', 'Sliding Window', 'Fixed Window', 'WebSocket', 'Abuse Detection'],
-    //   topicColor: '#0369a1', topicBg: '#e0f2fe', topicBorder: '#bae6fd',
-    //   cta: 'Launch Dashboard', ctaColor: '#0ea5e9',
-    //   border: '#bae6fd', grad: 'linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%)',
-    //   shadow: '0 20px 60px rgba(14,165,233,0.18)', key: 'rateLimiter',
-    // },
-    {
-      tag: 'Module 1', tagColor: '#6d28d9', tagBg: '#ede9fe', tagBorder: '#ddd6fe',
-      num: '01', icon: '🖥️', iconBg: 'linear-gradient(135deg,#ede9fe,#ddd6fe)',
-      title: 'OS Structures & Virtual Machines',
-      desc: 'Animated 3D walkthroughs of OS kernel architectures — Simple, Layered, Microkernel, Modules — plus Virtual Machines & VMware.',
-      topics: ['Simple Structure', 'Layered OS', 'Microkernel', 'Modules', 'VMs', 'VMware'],
-      topicColor: '#6d28d9', topicBg: '#ede9fe', topicBorder: '#ddd6fe',
-      cta: 'Explore Module 1', ctaColor: '#7c3aed',
-      border: '#ddd6fe', grad: 'linear-gradient(135deg,#faf5ff 0%,#ede9fe 100%)',
-      shadow: '0 20px 60px rgba(124,58,237,0.18)', key: 'osStructures',
-    },
-    {
-      tag: 'Module 2', tagColor: '#1d4ed8', tagBg: '#dbeafe', tagBorder: '#bfdbfe',
-      num: '02', icon: '⚙️', iconBg: 'linear-gradient(135deg,#dbeafe,#bfdbfe)',
-      title: 'Process Management',
-      desc: 'Interactive visualizations for Process Concept, Process Scheduling (ready queues, Gantt charts), Operations on Processes (fork/exec/context switch), and IPC (Shared Memory, Message Passing, Pipes).',
-      topics: ['Process Concept', 'PCB & States', 'Scheduling', 'Context Switch', 'fork / exec', 'IPC'],
-      topicColor: '#1d4ed8', topicBg: '#dbeafe', topicBorder: '#bfdbfe',
-      cta: 'Explore Module 2', ctaColor: '#2563eb',
-      border: '#bfdbfe', grad: 'linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%)',
-      shadow: '0 20px 60px rgba(37,99,235,0.18)', key: 'processConcepts',
-    },
-    {
-      tag: 'Module 3', tagColor: '#059669', tagBg: '#d1fae5', tagBorder: '#a7f3d0',
-      num: '03', icon: '🧵', iconBg: 'linear-gradient(135deg,#d1fae5,#a7f3d0)',
-      title: 'Threads & Concurrency',
-      desc: 'Interactive visualizations for Thread Overview, Multithreading Models (Many-to-One, One-to-One, Many-to-Many), Thread Libraries (Pthreads, Win32, Java), and Threading Issues (fork/exec, Signals, Cancellation, TLS).',
-      topics: ['Thread Overview', 'Multithreading Models', 'Pthreads / Win32 / Java', 'Threading Issues', 'TLS & LWPs'],
-      topicColor: '#059669', topicBg: '#d1fae5', topicBorder: '#a7f3d0',
-      cta: 'Explore Module 3', ctaColor: '#059669',
-      border: '#a7f3d0', grad: 'linear-gradient(135deg,#f0fdf4 0%,#d1fae5 100%)',
-      shadow: '0 20px 60px rgba(5,150,105,0.18)', key: 'threadsConcepts',
-    },
-    {
-      tag: 'Module 4', tagColor: '#d97706', tagBg: '#fef3c7', tagBorder: '#fde68a',
-      num: '04', icon: '⏱️', iconBg: 'linear-gradient(135deg,#fef3c7,#fde68a)',
-      title: 'CPU Scheduling',
-      desc: 'Interactive Gantt charts, live step simulations, and KPI tables for FCFS (Convoy effect), SJF & Preemptive SRTF, Round Robin (Quantum slider), Priority Scheduling & Aging, and Multilevel Feedback Queue (MLFQ).',
-      topics: ['FCFS & Convoy Effect', 'SJF & Preemptive SRTF', 'Round-Robin (q slider)', 'Priority & Aging', 'Multilevel Feedback Queue'],
-      topicColor: '#b45309', topicBg: '#fef3c7', topicBorder: '#fde68a',
-      cta: 'Explore Module 4', ctaColor: '#d97706',
-      border: '#fde68a', grad: 'linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%)',
-      shadow: '0 20px 60px rgba(217,119,6,0.18)', key: 'cpuScheduling',
-    },
-  ];
+  const handleNavigate = (routePath, topicId = null) => {
+    const targetUrl = topicId ? `/${routePath}/${topicId}` : `/${routePath}`;
+    setLoadingDest(targetUrl);
+    setTimeout(() => {
+      navigate(targetUrl);
+    }, 450);
+  };
+
+  if (viewMode === '3d_room') {
+    return <Room3DLanding onOpenArchitecture={() => setViewMode('architecture_map')} />;
+  }
 
   return (
     <div style={{
-      position: 'relative', minHeight: '100vh',
-      background: 'linear-gradient(145deg,#f8faff 0%,#eef2ff 40%,#faf5ff 100%)',
-      overflow: 'hidden', display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      fontFamily: "'Plus Jakarta Sans','Inter',sans-serif",
+      minHeight: '100vh',
+      background: '#ffffff',
+      fontFamily: FONT,
+      color: '#000000',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '2rem 1.5rem',
+      boxSizing: 'border-box',
     }}>
-      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />
-      <div style={{ position: 'absolute', top: '-8%', left: '-5%', width: 500, height: 500, background: 'radial-gradient(circle,rgba(147,197,253,0.35) 0%,transparent 70%)', borderRadius: '50%', zIndex: 0 }} />
-      <div style={{ position: 'absolute', bottom: '-5%', right: '-5%', width: 550, height: 550, background: 'radial-gradient(circle,rgba(196,181,253,0.3) 0%,transparent 70%)', borderRadius: '50%', zIndex: 0 }} />
-
-      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '3rem 2rem 4rem', width: '100%', maxWidth: 1100 }}>
-
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'white', border: '1.5px solid #bae6fd', borderRadius: '100px', padding: '0.4rem 1.1rem', fontSize: '0.78rem', color: '#0369a1', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', boxShadow: '0 2px 12px rgba(14,165,233,0.12)', marginBottom: '2rem' }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#0ea5e9', display: 'inline-block', animation: 'blink 1.8s infinite' }} />
-          Interactive CS Learning Platform
+      {/* ── Minimalist Clean Loading Transition ── */}
+      {loadingDest && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'rgba(255, 255, 255, 0.95)',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          backdropFilter: 'blur(3px)',
+        }}>
+          <div style={{
+            fontSize: '1.25rem', fontWeight: 700,
+            marginBottom: '0.75rem', letterSpacing: '0.02em',
+          }}>
+            Loading Visualizer…
+          </div>
+          <div style={{
+            width: 220, height: 3, background: '#e2e8f0',
+            borderRadius: 3, overflow: 'hidden', border: '1px solid #000000',
+          }}>
+            <div style={{
+              height: '100%', background: '#000000',
+              animation: 'progressFill 0.45s ease-in-out forwards',
+            }} />
+          </div>
         </div>
+      )}
 
-        <h1 style={{ fontSize: 'clamp(2.2rem,5.5vw,4.4rem)', fontWeight: 900, lineHeight: 1.08, marginBottom: '0.9rem', color: '#0f172a', letterSpacing: '-0.03em' }}>
-          Systems &amp; Architecture<br />
-          <span style={{ background: 'linear-gradient(90deg,#2563eb,#7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Visual Explorer</span>
-        </h1>
+      <div style={{ width: '100%', maxWidth: 1200, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
-        <p style={{ fontSize: '1rem', color: '#475569', maxWidth: 560, margin: '0 auto 3rem', lineHeight: 1.75 }}>
-          Learn OS concepts through <strong style={{ color: '#2563eb' }}>live animated visualizers</strong>. Pick a module below to get started.
-        </p>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem', justifyContent: 'flex-start' }}>
-          <div style={{ width: 32, height: 3, background: 'linear-gradient(90deg,#2563eb,#7c3aed)', borderRadius: 2 }} />
-          <span style={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#64748b' }}>Table of Contents</span>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: '1.5rem', textAlign: 'left' }}>
-          {MODULES.map(m => (
-            <button
-              key={m.key}
-              id={`btn-${m.key}`}
-              onClick={() => onNavigate(m.key)}
-              style={{ background: m.grad, border: `1.5px solid ${m.border}`, borderRadius: '20px', padding: '2rem 1.85rem', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)', textAlign: 'left', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', position: 'relative', overflow: 'hidden' }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-8px) scale(1.015)'; e.currentTarget.style.boxShadow = m.shadow; e.currentTarget.style.borderColor = m.ctaColor; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.06)'; e.currentTarget.style.borderColor = m.border; }}
-            >
-              {m.num && (
-                <div style={{ position: 'absolute', top: 12, right: 18, fontSize: '3.5rem', fontWeight: 900, color: m.tagBg, lineHeight: 1, userSelect: 'none', pointerEvents: 'none', letterSpacing: '-0.04em' }}>{m.num}</div>
-              )}
-              <div style={{ width: 52, height: 52, borderRadius: '14px', background: m.iconBg, border: `1.5px solid ${m.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.6rem', marginBottom: '1.25rem', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>{m.icon}</div>
-              <div style={{ display: 'inline-block', background: m.tagBg, border: `1px solid ${m.tagBorder}`, borderRadius: '100px', padding: '0.18rem 0.75rem', fontSize: '0.68rem', color: m.tagColor, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.85rem' }}>{m.tag}</div>
-              <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.6rem', letterSpacing: '-0.02em' }}>{m.title}</h2>
-              <p style={{ fontSize: '0.84rem', color: '#64748b', lineHeight: 1.7, marginBottom: '1.25rem' }}>{m.desc}</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '1.5rem' }}>
-                {m.topics.map(t => (
-                  <span key={t} style={{ background: m.topicBg, border: `1px solid ${m.topicBorder}`, borderRadius: '6px', padding: '0.18rem 0.6rem', fontSize: '0.7rem', color: m.topicColor, fontWeight: 600 }}>{t}</span>
-                ))}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: m.ctaColor, fontSize: '0.88rem', fontWeight: 700 }}>
-                {m.cta}
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </div>
-            </button>
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', gap: '3rem', justifyContent: 'center', marginTop: '3.5rem', borderTop: '1.5px solid #e2e8f0', paddingTop: '2.5rem', flexWrap: 'wrap' }}>
-          {[{ val: '3', label: 'OS Modules' }, { val: '14+', label: 'Visualizers' }, { val: '3', label: 'Rate Algorithms' }, { val: 'Live', label: 'Animations' }].map(s => (
-            <div key={s.label} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '1.8rem', fontWeight: 900, background: 'linear-gradient(90deg,#2563eb,#7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{s.val}</div>
-              <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.2rem', fontWeight: 500 }}>{s.label}</div>
+        {/* ── Top Header ── */}
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+              border: '1.5px solid #000000', borderRadius: 100,
+              padding: '0.25rem 0.85rem', fontSize: '0.72rem', color: '#000000',
+              fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+              background: '#ffffff', boxShadow: '2px 2px 0px #000000',
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#000000', display: 'inline-block' }} />
+              Interactive Operating System Architecture Map
             </div>
-          ))}
+
+            <button
+              onClick={() => setViewMode('3d_room')}
+              style={{
+                background: '#000000',
+                color: '#ffffff',
+                border: '1.5px solid #000000',
+                borderRadius: 100,
+                padding: '0.25rem 0.95rem',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: FONT,
+                boxShadow: '2px 2px 0px #000000',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+              }}
+            >
+              <span>🎮</span> 3D Gaming Rig Room View
+            </button>
+          </div>
+
+          <h1 style={{
+            fontSize: 'clamp(2rem, 4vw, 3.2rem)',
+            fontWeight: 700,
+            margin: '0 0 0.35rem',
+            letterSpacing: '-0.02em',
+            lineHeight: 1.1,
+          }}>
+            Operating Systems Visual Explorer
+          </h1>
+
+          <p style={{
+            fontSize: '1rem',
+            color: '#374151',
+            maxWidth: 680,
+            margin: '0 auto',
+            lineHeight: 1.5,
+          }}>
+            Explore the relationship between <strong>Hardware</strong>, the <strong>CPU Socket &amp; Kernel</strong>, and each <strong>OS Software Subsystem</strong>.
+            Click any chapter or specific topic below to launch its visualizer.
+          </p>
         </div>
+
+        {/* ── Main Unified Architecture Board ── */}
+        <div style={{
+          background: '#ffffff',
+          border: '2px solid #000000',
+          borderRadius: 14,
+          padding: '1.5rem',
+          boxShadow: '5px 5px 0px #000000',
+          display: 'grid',
+          gridTemplateColumns: '280px 300px 1fr',
+          gap: '1.25rem',
+          alignItems: 'stretch',
+        }}>
+
+          {/* ══════════════════════════════════════════════════════════════════
+              COLUMN 1: HARDWARE LAYER (Left)
+              ══════════════════════════════════════════════════════════════════ */}
+          <div style={{
+            display: 'flex', flexDirection: 'column',
+            borderRight: '1.5px dashed #cbd5e1',
+            paddingRight: '1.25rem',
+          }}>
+            <div style={{
+              fontSize: '12px', fontWeight: 700, textTransform: 'uppercase',
+              letterSpacing: '0.12em', color: '#000000', textAlign: 'center',
+              paddingBottom: '0.6rem', borderBottom: '1.5px solid #000000',
+              marginBottom: '0.85rem',
+            }}>
+              Hardware Layer
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, justifyContent: 'space-around' }}>
+              {HARDWARE_COMPONENTS.map((hw, i) => (
+                <div key={hw.label} style={{
+                  background: '#fcfcfc',
+                  border: '1.5px solid #000000',
+                  borderRadius: 8,
+                  padding: '0.75rem 0.85rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  boxShadow: '2px 2px 0px #000000',
+                }}>
+                  <span style={{ fontSize: '1.4rem', flexShrink: 0 }}>{hw.icon}</span>
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#000000', lineHeight: 1.2 }}>
+                      {hw.label}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '3px', lineHeight: 1.3 }}>
+                      {hw.sub}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{
+              marginTop: '0.85rem',
+              background: '#f8fafc',
+              border: '1px solid #000000',
+              borderRadius: 6,
+              padding: '0.4rem',
+              textAlign: 'center',
+              fontSize: '11px',
+              fontWeight: 700,
+              color: '#334155',
+            }}>
+              Physical Electronic Circuits &amp; Peripherals
+            </div>
+          </div>
+
+          {/* ══════════════════════════════════════════════════════════════════
+              COLUMN 2: MODERN CPU PACKAGE & SOC DIE MAPPING (Center)
+              ══════════════════════════════════════════════════════════════════ */}
+          <div style={{
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'space-between',
+            padding: '0 0.5rem',
+          }}>
+            <div style={{
+              fontSize: '12px', fontWeight: 700, textTransform: 'uppercase',
+              letterSpacing: '0.12em', color: '#000000', textAlign: 'center',
+              paddingBottom: '0.6rem', borderBottom: '1.5px solid #000000',
+              width: '100%', marginBottom: '0.85rem',
+            }}>
+              CPU Socket &amp; Kernel
+            </div>
+
+            {/* ── Modern CPU Package ── */}
+            <div style={{
+              width: '100%',
+              maxWidth: 270,
+              background: '#1e293b',
+              border: '2.5px solid #000000',
+              borderRadius: 12,
+              padding: '8px',
+              boxShadow: '4px 4px 0px #000000',
+              position: 'relative',
+              boxSizing: 'border-box',
+            }}>
+              {/* Golden Pin 1 Triangle in top-left corner */}
+              <div style={{
+                position: 'absolute', top: 3, left: 3,
+                width: 0, height: 0,
+                borderTop: '9px solid #eab308',
+                borderRight: '9px solid transparent',
+              }} />
+
+              {/* Silicon Substrate Board */}
+              <div style={{
+                background: '#0f172a',
+                border: '1.5px solid #334155',
+                borderRadius: 8,
+                padding: '8px',
+                color: '#f8fafc',
+                display: 'flex', flexDirection: 'column', gap: '6px',
+              }}>
+                {/* IHS Heatspreader Laser Inscription */}
+                <div style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  borderBottom: '1px solid #334155', paddingBottom: '4px',
+                }}>
+                  <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', color: '#94a3b8' }}>
+                    CPU DIE MAPPING
+                  </span>
+                  <span style={{ fontSize: '9px', color: '#22c55e', fontWeight: 700 }}>
+                    ● 64-BIT RING 0
+                  </span>
+                </div>
+
+                {/* Over-Die OS Chapter Blocks */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                  {OS_CHAPTERS.map((ch) => {
+                    const isHovered = hoveredChapter === ch.key;
+                    return (
+                      <div
+                        key={ch.key}
+                        onClick={() => handleNavigate(ch.route)}
+                        onMouseEnter={() => setHoveredChapter(ch.key)}
+                        onMouseLeave={() => setHoveredChapter(null)}
+                        style={{
+                          background: isHovered ? ch.bg : '#1e293b',
+                          border: isHovered ? `1.5px solid ${ch.color}` : '1px solid #334155',
+                          borderRadius: 5,
+                          padding: '5px 7px',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          <span style={{ fontSize: '12px' }}>{ch.icon}</span>
+                          <div>
+                            <div style={{
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              color: isHovered ? '#000000' : '#f8fafc',
+                              lineHeight: 1.1,
+                            }}>
+                              {ch.cpuLabel}
+                            </div>
+                            <div style={{
+                              fontSize: '9px',
+                              color: isHovered ? ch.color : '#94a3b8',
+                              fontWeight: 700,
+                            }}>
+                              {ch.chapterNum} Target
+                            </div>
+                          </div>
+                        </div>
+                        <span style={{
+                          fontSize: '10px',
+                          color: isHovered ? ch.color : '#64748b',
+                          fontWeight: 700,
+                        }}>
+                          →
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Bottom Bus Indicator */}
+                <div style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  paddingTop: '3px', borderTop: '1px solid #334155', fontSize: '9px', color: '#64748b',
+                }}>
+                  <span>L1/L2/L3 CACHE</span>
+                  <span style={{ color: '#38bdf8' }}>MESI SYSTEM BUS</span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              fontSize: '11px', fontWeight: 700, color: '#475569',
+              textAlign: 'center', marginTop: '0.85rem',
+            }}>
+              Hardware-Software Interconnect
+            </div>
+          </div>
+
+          {/* ══════════════════════════════════════════════════════════════════
+              COLUMN 3: SOFTWARE CHAPTERS & DIRECT TOPIC NAVIGATION (Right)
+              ══════════════════════════════════════════════════════════════════ */}
+          <div style={{
+            display: 'flex', flexDirection: 'column',
+            borderLeft: '1.5px dashed #cbd5e1',
+            paddingLeft: '1.25rem',
+          }}>
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              paddingBottom: '0.6rem', borderBottom: '1.5px solid #000000',
+              marginBottom: '0.85rem',
+            }}>
+              <span style={{
+                fontSize: '12px', fontWeight: 700, textTransform: 'uppercase',
+                letterSpacing: '0.12em', color: '#000000',
+              }}>
+                Software Layer — Chapters
+              </span>
+              <span style={{
+                fontSize: '10px', color: '#64748b', fontWeight: 700,
+                background: '#f1f5f9', border: '1px solid #cbd5e1',
+                padding: '2px 6px', borderRadius: 4,
+              }}>
+                Scrollable List (5 Modules)
+              </span>
+            </div>
+
+            {/* ── Scrollable Right Container ── */}
+            <div
+              className="os-chapters-scroll"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem',
+                maxHeight: '440px',
+                overflowY: 'auto',
+                paddingRight: '0.4rem',
+              }}
+            >
+              {OS_CHAPTERS.map((ch) => {
+                const isHovered = hoveredChapter === ch.key;
+                return (
+                  <div
+                    key={ch.key}
+                    onMouseEnter={() => setHoveredChapter(ch.key)}
+                    onMouseLeave={() => setHoveredChapter(null)}
+                    style={{
+                      background: isHovered ? '#fafafa' : '#ffffff',
+                      border: isHovered ? `2px solid ${ch.color}` : '1.5px solid #000000',
+                      borderRadius: 10,
+                      padding: '0.75rem 0.9rem',
+                      boxShadow: isHovered ? `3px 3px 0px ${ch.color}` : '2px 2px 0px #000000',
+                      transition: 'all 0.15s ease',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.45rem',
+                    }}
+                  >
+                    {/* Chapter Title Bar (clickable to open chapter) */}
+                    <div
+                      onClick={() => handleNavigate(ch.route)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <span style={{ fontSize: '1.3rem' }}>{ch.icon}</span>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span style={{
+                              fontSize: '14px', fontWeight: 700,
+                              color: isHovered ? ch.color : '#000000',
+                              lineHeight: 1.2,
+                            }}>
+                              {ch.title}
+                            </span>
+                            <span style={{
+                              fontSize: '10px', fontWeight: 700,
+                              background: ch.bg, border: `1px solid ${ch.border}`,
+                              color: ch.color, padding: '1px 5px', borderRadius: 4,
+                            }}>
+                              {ch.chapterNum}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic' }}>
+                            {ch.subtitle}
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleNavigate(ch.route);
+                        }}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          fontSize: '14px',
+                          fontWeight: 700,
+                          color: isHovered ? ch.color : '#94a3b8',
+                          cursor: 'pointer',
+                          padding: '2px 6px',
+                        }}
+                        title="Open Module"
+                      >
+                        Launch →
+                      </button>
+                    </div>
+
+                    {/* Direct Topic Pills (Individually Clickable) */}
+                    <div style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '0.35rem',
+                      paddingTop: '0.2rem',
+                      borderTop: '1px dashed #e2e8f0',
+                    }}>
+                      {ch.topics.map((tp) => (
+                        <button
+                          key={tp.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleNavigate(ch.route, tp.id);
+                          }}
+                          className="os-topic-pill"
+                          style={{
+                            background: '#ffffff',
+                            border: '1px solid #000000',
+                            borderRadius: 4,
+                            padding: '2px 7px',
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            fontFamily: FONT,
+                            color: '#000000',
+                            cursor: 'pointer',
+                            transition: 'all 0.12s ease',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#000000';
+                            e.currentTarget.style.color = '#ffffff';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#ffffff';
+                            e.currentTarget.style.color = '#000000';
+                          }}
+                        >
+                          {tp.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{
+              marginTop: '0.85rem',
+              background: '#f8fafc',
+              border: '1px solid #000000',
+              borderRadius: 6,
+              padding: '0.4rem',
+              textAlign: 'center',
+              fontSize: '11px',
+              fontWeight: 700,
+              color: '#334155',
+            }}>
+              Runs in Ring 0 (Kernel) &amp; Ring 3 (User Space)
+            </div>
+          </div>
+        </div>
+
+        {/* ── Footer Information Row ── */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          padding: '0.5rem 0',
+          borderTop: '1px solid #e2e8f0',
+          fontSize: '12px',
+          color: '#64748b',
+        }}>
+          <div>
+            Operating System Concepts — 10th Edition (Silberschatz, Galvin, Gagne)
+          </div>
+          <div style={{ display: 'flex', gap: '1rem', fontWeight: 700 }}>
+            <span>✓ 5 Chapters Connected</span>
+            <span>✓ Direct Topic Routing</span>
+            <span>✓ High-Performance Architecture</span>
+          </div>
+        </div>
+
       </div>
-      <style>{`@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.35} }`}</style>
+
+      {/* ── Custom CSS for Scrollbars & Minimalist Transitions ── */}
+      <style>{`
+        .os-chapters-scroll::-webkit-scrollbar {
+          width: 5px;
+        }
+        .os-chapters-scroll::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 4px;
+        }
+        .os-chapters-scroll::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 4px;
+        }
+        .os-chapters-scroll::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+        @keyframes progressFill {
+          from { width: 0%; }
+          to { width: 100%; }
+        }
+      `}</style>
     </div>
   );
 }
